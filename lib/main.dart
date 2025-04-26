@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'todo_database.dart';
 
 void main() {
   runApp(const MyApp());
@@ -31,20 +32,33 @@ class ToDoHomePage extends StatefulWidget {
 class _ToDoHomePageState extends State<ToDoHomePage> {
   final TextEditingController _controller = TextEditingController();
   final List<String> _todos = [];
+  final ToDoDatabase _db = ToDoDatabase();
 
-  void _addTodo() {
+  @override
+  void initState() {
+    super.initState();
+    _loadTasks();
+  }
+
+  Future<void> _loadTasks() async {
+    final tasks = await _db.getTasks();
+    setState(() {
+      _todos.clear();
+      _todos.addAll(tasks);
+    });
+  }
+
+  Future<void> _addTodo() async {
     if (_controller.text.isNotEmpty) {
-      setState(() {
-        _todos.add(_controller.text);
-        _controller.clear();
-      });
+      await _db.insertTask(_controller.text);
+      _controller.clear();
+      await _loadTasks();
     }
   }
 
-  void _removeTodo(int index) {
-    setState(() {
-      _todos.removeAt(index);
-    });
+  Future<void> _removeTodo(int index) async {
+    await _db.deleteTask(index);
+    await _loadTasks();
   }
 
   @override
